@@ -125,7 +125,7 @@
       <div class="keys">
         <div><b class="tagP1">1P</b> <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>　<b class="tagP2">2P</b> <kbd>W</kbd><kbd>S</kbd><kbd>A</kbd><kbd>D</kbd></div>
         <div>白い縁石ラインを越えると<b>減速</b>／さらに外は<b>壁</b></div>
-        <div><kbd>P</kbd> ポーズ　<kbd>R</kbd> やり直し　<kbd>Esc</kbd> メニュー</div>
+        <div><kbd>P</kbd> ポーズ　<kbd>R</kbd> やり直し　<kbd>M</kbd> ミュート　<kbd>Esc</kbd> メニュー</div>
       </div>
     </div>
 
@@ -185,32 +185,33 @@ const COURSES = [
   {
     name:'マウンテン・テクニカル',
     diff:'むずかしい',
-    desc:'S字と切り返しの連続。<br>リズムが崩れると一気に遅れる。',
+    desc:'三連S字と左の切り返し。<br>リズムが崩れると一気に遅れる。',
     width:111, runoff:18,
     ground:{ a:'#7b7f5e', b:'#6e7254' },
     pts:[ [1060,570,130],[1170,430,120],[1155,205,120],[880,120,130],
-          [640,240,110],[400,115,120],[160,240,130],[150,540,130],[330,600,120] ]
+          [720,220,105],[560,120,105],[400,215,110],
+          [160,240,130],[140,430,120],[175,555,120],[330,600,120] ]
   },
   {
     name:'ラビリンス・サーキット',
     diff:'最上級',
-    desc:'12の直角コーナーと2本の深いU字。<br>迷路のような最難関コース。',
+    desc:'深いU字と鋭いV字、高速キンク。<br>性格の違うコーナーが並ぶ最難関。',
     // 路肩を狭くしてある（＝壁が近い）ので、他より小さい半径のコーナーを置ける
     width:96, runoff:12,
     ground:{ a:'#3d4160', b:'#363a56' },
-    // 直角コーナーばかりの「くし形」。上の直線から下へ2本ディップが伸びる
-    pts:[ [1140,592, 86],[1140,178, 86],
-          [ 900,178, 76],[ 900,424, 76],[ 706,424, 76],[ 706,178, 76],
-          [ 486,178, 76],[ 486,424, 76],[ 292,424, 76],[ 292,178, 76],
-          [ 118,178, 86],[ 118,592, 86] ]
+    // 半径も角度も1つずつ変えてある：高速キンク → 深いU字 → 鋭いV字 → ロングストレート
+    pts:[ [1145,595,105],[1170,380,130],[1115,170,110],
+          [ 950,150, 78],[ 935,455, 78],[ 745,440, 95],[ 765,185, 95],
+          [ 545,175,100],[ 430,445, 78],[ 315,175,100],
+          [ 125,180,105],[ 125,595,105] ]
   }
 ];
 
 const SKIN = {
   road :'#3b3e44',   // アスファルト
   apron:'#e9dcb8',   // 減速ゾーン（路肩）
-  kerbA:'#d93a2b',   // 縁石 赤
-  kerbB:'#f7f7f7',   // 縁石 白
+  kerbA:'#c8806f',   // 縁石 赤（路肩に馴染むよう彩度を落としてある）
+  kerbB:'#efe6d2',   // 縁石 白
   wall :'#9aa0ad',   // 壁
   wallD:'#5c6270',
   lane :'#e8ecf2',   // センターライン
@@ -516,20 +517,75 @@ addEventListener('blur', ()=>{ for(const k in keys) keys[k]=false; });
 function onKeyPress(k){
   if(k==='p'){ if(G.mode==='race') pause(); else if(G.mode==='pause') resume(); }
   if(k==='r'){ if(G.mode!=='title') startRace(); }
+  if(k==='m'){ muted=!muted; }
   if(k==='Escape'){ if(G.mode!=='title') toTitle(); }
 }
 
-let actx=null;
-function beep(freq, dur=0.12, type='square', vol=0.16){
+/* =========================================================
+   6b. サウンド
+   ========================================================= */
+let actx=null, muted=false;
+function audio(){
   try{
     actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const o=actx.createOscillator(), g=actx.createGain();
+    if(actx.state==='suspended') actx.resume();
+  }catch(_){ actx=null; }
+  return actx;
+}
+function beep(freq, dur=0.12, type='square', vol=0.16){
+  const c=audio(); if(!c || muted) return;
+  try{
+    const o=c.createOscillator(), g=c.createGain();
     o.type=type; o.frequency.value=freq;
-    g.gain.setValueAtTime(vol, actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
-    o.connect(g); g.connect(actx.destination);
-    o.start(); o.stop(actx.currentTime+dur);
+    g.gain.setValueAtTime(vol, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime+dur);
   }catch(_){}
+}
+
+/* --- エンジン音：プレイヤー1人につき1基。回転数を速度から作る --- */
+const engines=[];
+function engineOff(){
+  for(const e of engines){ try{ e.gain.gain.value=0; e.o1.stop(); e.o2.stop(); }catch(_){} }
+  engines.length=0;
+}
+function engineOn(n){
+  engineOff();
+  const c=audio(); if(!c) return;
+  try{
+    for(let i=0;i<n;i++){
+      const gain=c.createGain(); gain.gain.value=0;
+      const filt=c.createBiquadFilter();
+      filt.type='lowpass'; filt.frequency.value=400; filt.Q.value=4;
+      const o1=c.createOscillator(); o1.type='sawtooth'; o1.frequency.value=48;
+      const o2=c.createOscillator(); o2.type='square';   o2.frequency.value=24;
+      const g2=c.createGain(); g2.gain.value=0.45;
+      o1.connect(filt); o2.connect(g2); g2.connect(filt);
+      filt.connect(gain); gain.connect(c.destination);
+      o1.start(); o2.start();
+      engines.push({o1,o2,g2,filt,gain, detune:i*9});
+    }
+  }catch(_){ engineOff(); }
+}
+function engineUpdate(){
+  if(!engines.length || !actx) return;
+  const t=actx.currentTime, running=(G.mode==='race'||G.mode==='count');
+  engines.forEach((e,i)=>{
+    const car=G.cars[i];
+    if(!car){ e.gain.gain.setTargetAtTime(0,t,0.05); return; }
+    const norm=Math.min(1, car.speed/PHYS.maxSpeed);
+    // 5速ぶんの疑似シフト。ギアが上がるたびに音程が落ちて上がり直す
+    const gear=Math.min(4, Math.floor(norm*4.999));
+    const rev=norm*5-gear;
+    const on=(car.throttle||0)>0 ? 1 : 0;
+    const hz=44+rev*80+e.detune;
+    const vol=(running && !muted && !car.gone) ? (0.030+0.070*norm)*(0.55+0.45*on) : 0;
+    e.o1.frequency.setTargetAtTime(hz,   t, 0.04);
+    e.o2.frequency.setTargetAtTime(hz/2, t, 0.04);
+    e.filt.frequency.setTargetAtTime(280+norm*2100+on*350, t, 0.06);
+    e.gain.gain.setTargetAtTime(vol, t, 0.06);
+  });
 }
 
 /* =========================================================
@@ -559,6 +615,7 @@ function startRace(){
 
   G.finishOrder=[]; G.raceTime=0; G.countdown=3.6; G.shake=0; G.mode='count';
   showScreen(null);
+  engineOn(G.players);
   beep(660,0.14);
 }
 
@@ -781,7 +838,7 @@ function progress(car, tk){
 function finishRace(){
   const rest=G.cars.filter(c=>!c.finished).sort((a,b)=>total(b)-total(a));
   for(const c of rest){ G.finishOrder.push(c); c.rank=G.finishOrder.length; }
-  G.mode='result'; showResult();
+  G.mode='result'; engineOff(); showResult();
   beep(880,0.18,'triangle'); setTimeout(()=>beep(1174,0.28,'triangle'),170);
 }
 function total(c){ return c.lap*100000 + c.cpSeen*1000 + c.node; }
@@ -1012,6 +1069,7 @@ function loop(ts){
   if(dt>0.25) dt=0.25;
   G.acc+=dt;
   while(G.acc>=DT){ update(); G.acc-=DT; }
+  engineUpdate();
   draw();
 }
 
@@ -1079,7 +1137,7 @@ document.getElementById('btnMenu3').onclick   = toTitle;
 
 function pause(){ G.mode='pause'; showScreen('pause'); }
 function resume(){ G.mode='race'; showScreen(null); }
-function toTitle(){ G.mode='title'; G.track=null; showScreen('title'); drawMinimaps(); }
+function toTitle(){ G.mode='title'; G.track=null; engineOff(); showScreen('title'); drawMinimaps(); }
 
 function showResult(){
   const list=[...G.finishOrder], top=list[0];
@@ -1100,7 +1158,7 @@ function showResult(){
   showScreen('result');
 }
 
-hintEl.textContent='縁石ラインの外は減速／さらに外は壁　P:ポーズ R:やり直し Esc:メニュー';
+hintEl.textContent='縁石ラインの外は減速／さらに外は壁　P:ポーズ R:やり直し M:ミュート Esc:メニュー';
 resize();
 showScreen('title');
 requestAnimationFrame(loop);
