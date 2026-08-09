@@ -6,84 +6,77 @@
 <title>TOP RACERS — 俯瞰レース</title>
 <style>
   :root{
-    --bg:#11131a; --panel:#1b1f2b; --line:#2c3244;
+    --panel:#1b1f2b; --line:#2c3244;
     --fg:#e8ecf4; --muted:#98a2b8;
     --p1:#ff4d5a; --p2:#3fa9ff; --accent:#ffd23f;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0d1017}
   body{
-    background:radial-gradient(120% 90% at 50% 0%,#1d2334 0%,var(--bg) 70%);
     color:var(--fg);
     font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,-apple-system,sans-serif;
-    display:flex;align-items:center;justify-content:center;
-    min-height:100%;padding:12px;
     -webkit-font-smoothing:antialiased;
   }
-  #wrap{position:relative;width:1000px;max-width:100%}
-  canvas{
-    display:block;width:100%;height:auto;
-    background:#0d1017;border-radius:14px;
-    box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 0 1px #2b3246 inset;
-    touch-action:none;
-  }
+  #wrap{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
 
   /* ---------- overlay ---------- */
-  #ui{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  #ui{position:absolute;inset:0;pointer-events:none}
   .screen{
-    pointer-events:auto;
-    width:100%;height:100%;border-radius:14px;
-    background:rgba(10,12,18,.86);backdrop-filter:blur(6px);
+    pointer-events:auto;position:absolute;inset:0;
+    background:rgba(10,12,18,.87);backdrop-filter:blur(6px);
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:clamp(8px,1.6vw,18px);padding:clamp(12px,3vw,32px);text-align:center;
-    overflow:auto;
+    gap:1.6vh;padding:2vh 2vw;text-align:center;overflow:hidden;
   }
   .screen[hidden]{display:none}
   h1{
-    margin:0;font-size:clamp(26px,5.4vw,54px);letter-spacing:.14em;font-weight:800;
+    margin:0;font-size:clamp(22px,5.2vh,52px);letter-spacing:.14em;font-weight:800;line-height:1;
     background:linear-gradient(180deg,#fff,#ffd23f);-webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  .sub{margin:0;color:var(--muted);font-size:clamp(11px,1.6vw,15px);letter-spacing:.08em}
-  h2{margin:0;font-size:clamp(20px,3.4vw,34px);letter-spacing:.1em}
+  .sub{margin:0;color:var(--muted);font-size:clamp(10px,1.7vh,15px);letter-spacing:.08em;line-height:1.4}
+  h2{margin:0;font-size:clamp(18px,4vh,34px);letter-spacing:.1em}
 
-  .row{display:flex;gap:clamp(8px,1.4vw,16px);flex-wrap:wrap;justify-content:center}
+  .row{display:flex;gap:clamp(6px,1.2vw,16px);flex-wrap:wrap;justify-content:center;align-items:stretch}
+  .group{display:flex;flex-direction:column;gap:.7vh;align-items:center}
   .card{
-    background:var(--panel);border:2px solid var(--line);border-radius:12px;
-    padding:clamp(10px,1.6vw,18px) clamp(12px,2vw,22px);
-    cursor:pointer;transition:.14s;min-width:150px;color:inherit;font:inherit;text-align:center;
+    background:var(--panel);border:2px solid var(--line);border-radius:10px;
+    padding:clamp(6px,1.2vh,14px) clamp(10px,1.4vw,20px);
+    cursor:pointer;transition:.14s;color:inherit;font:inherit;text-align:center;
   }
-  .card:hover{border-color:#4a5474;transform:translateY(-2px)}
+  .card:hover{border-color:#4a5474}
   .card.sel{border-color:var(--accent);background:#262b3a;box-shadow:0 0 0 3px rgba(255,210,63,.18)}
-  .card .t{font-size:clamp(14px,2vw,19px);font-weight:700;margin-bottom:4px}
-  .card .d{font-size:clamp(10px,1.4vw,12px);color:var(--muted);line-height:1.6}
-  .mini{width:120px;height:84px;display:block;margin:0 auto 8px;background:#0f1219;border-radius:8px}
+  .card .t{font-size:clamp(12px,1.9vh,18px);font-weight:700}
+  .card .d{font-size:clamp(9px,1.35vh,12px);color:var(--muted);line-height:1.5;margin-top:3px}
+  .course{min-width:clamp(140px,17vw,230px)}
+  .mini{display:block;margin:0 auto 6px;width:100%;height:clamp(46px,11vh,96px);
+        background:#0f1219;border-radius:7px;object-fit:contain}
 
   button.go{
-    pointer-events:auto;margin-top:6px;
     background:linear-gradient(180deg,#ffd23f,#f0a800);color:#22190a;
-    border:0;border-radius:999px;padding:14px 44px;
-    font-size:clamp(15px,2.2vw,20px);font-weight:800;letter-spacing:.12em;cursor:pointer;
+    border:0;border-radius:999px;padding:clamp(8px,1.5vh,15px) clamp(28px,4vw,48px);
+    font-size:clamp(13px,2.2vh,20px);font-weight:800;letter-spacing:.12em;cursor:pointer;
     box-shadow:0 8px 24px rgba(255,180,0,.28);
   }
   button.go:hover{filter:brightness(1.07)}
   button.ghost{
     background:transparent;color:var(--muted);border:2px solid var(--line);
-    border-radius:999px;padding:10px 26px;font-size:13px;cursor:pointer;letter-spacing:.1em;
+    border-radius:999px;padding:clamp(6px,1.1vh,11px) clamp(16px,2.2vw,28px);
+    font-size:clamp(11px,1.6vh,14px);cursor:pointer;letter-spacing:.1em;
   }
   button.ghost:hover{color:var(--fg);border-color:#4a5474}
 
-  .keys{display:flex;gap:clamp(14px,3vw,40px);flex-wrap:wrap;justify-content:center;margin-top:4px}
-  .keys div{font-size:clamp(10px,1.5vw,13px);color:var(--muted);line-height:1.9}
+  .keys{display:flex;gap:clamp(10px,2.4vw,40px);flex-wrap:wrap;justify-content:center}
+  .keys div{font-size:clamp(9px,1.5vh,13px);color:var(--muted);line-height:1.8}
   .keys b{color:var(--fg);font-weight:700}
   kbd{
-    display:inline-block;min-width:20px;padding:2px 6px;margin:0 1px;
-    background:#252b3b;border:1px solid #39415a;border-bottom-width:2px;border-radius:5px;
+    display:inline-block;min-width:17px;padding:1px 5px;margin:0 1px;
+    background:#252b3b;border:1px solid #39415a;border-bottom-width:2px;border-radius:4px;
     font-family:inherit;font-size:.92em;color:#dbe3f2;
   }
   .tagP1{color:var(--p1)} .tagP2{color:var(--p2)}
 
-  table{border-collapse:collapse;font-size:clamp(11px,1.7vw,15px)}
-  th,td{padding:7px clamp(8px,1.6vw,18px);border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  table{border-collapse:collapse;font-size:clamp(10px,1.9vh,15px)}
+  th,td{padding:.7vh clamp(8px,1.6vw,20px);border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
   th{color:var(--muted);font-weight:600;font-size:.86em;letter-spacing:.08em}
   td.num{text-align:right;font-variant-numeric:tabular-nums}
   .pos{font-weight:800;color:var(--accent)}
@@ -97,42 +90,45 @@
 </head>
 <body>
 <div id="wrap">
-  <canvas id="cv" width="1000" height="700"></canvas>
+  <canvas id="cv"></canvas>
 
   <div id="ui">
     <!-- ===== title / setup ===== -->
     <div class="screen" id="scrTitle">
-      <h1>TOP&nbsp;RACERS</h1>
-      <p class="sub">スクロールなし・パースなし　まるごと見える俯瞰レース</p>
-
       <div>
-        <p class="sub" style="margin-bottom:8px">プレイ人数</p>
-        <div class="row" id="players">
-          <button class="card sel" data-p="1"><div class="t">1人プレイ</div><div class="d">CPU 3台と対戦</div></button>
-          <button class="card" data-p="2"><div class="t">2人プレイ</div><div class="d">対戦 ＋ CPU 2台</div></button>
+        <h1>TOP&nbsp;RACERS</h1>
+        <p class="sub" style="margin-top:.7vh">スクロールなし・パースなし　まるごと見える俯瞰レース</p>
+      </div>
+
+      <div class="row" style="gap:clamp(14px,3vw,44px)">
+        <div class="group">
+          <p class="sub">プレイ人数</p>
+          <div class="row" id="players">
+            <button class="card sel" data-p="1"><div class="t">1人</div><div class="d">CPU 3台と対戦</div></button>
+            <button class="card" data-p="2"><div class="t">2人</div><div class="d">対戦 ＋ CPU 2台</div></button>
+          </div>
+        </div>
+        <div class="group">
+          <p class="sub">周回数</p>
+          <div class="row" id="laps">
+            <button class="card" data-l="3"><div class="t">3</div></button>
+            <button class="card sel" data-l="5"><div class="t">5</div></button>
+            <button class="card" data-l="8"><div class="t">8</div></button>
+          </div>
         </div>
       </div>
 
-      <div>
-        <p class="sub" style="margin-bottom:8px">コースを選ぶ</p>
+      <div class="group" style="width:100%">
+        <p class="sub">コースを選ぶ</p>
         <div class="row" id="courses"></div>
-      </div>
-
-      <div>
-        <p class="sub" style="margin-bottom:8px">周回数</p>
-        <div class="row" id="laps">
-          <button class="card" data-l="3" style="min-width:80px"><div class="t">3</div></button>
-          <button class="card sel" data-l="5" style="min-width:80px"><div class="t">5</div></button>
-          <button class="card" data-l="8" style="min-width:80px"><div class="t">8</div></button>
-        </div>
       </div>
 
       <button class="go" id="btnStart">スタート</button>
 
       <div class="keys">
-        <div><b class="tagP1">1P</b>　<kbd>↑</kbd><kbd>↓</kbd> アクセル/ブレーキ　<kbd>←</kbd><kbd>→</kbd> ハンドル</div>
-        <div><b class="tagP2">2P</b>　<kbd>W</kbd><kbd>S</kbd> アクセル/ブレーキ　<kbd>A</kbd><kbd>D</kbd> ハンドル</div>
-        <div>コース外は<b>壁</b>　ぶつかると弾かれて減速する<br><kbd>P</kbd> ポーズ　<kbd>R</kbd> やり直し　<kbd>Esc</kbd> メニュー</div>
+        <div><b class="tagP1">1P</b> <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>　<b class="tagP2">2P</b> <kbd>W</kbd><kbd>S</kbd><kbd>A</kbd><kbd>D</kbd></div>
+        <div>白い縁石ラインを越えると<b>減速</b>／さらに外は<b>壁</b></div>
+        <div><kbd>P</kbd> ポーズ　<kbd>R</kbd> やり直し　<kbd>Esc</kbd> メニュー</div>
       </div>
     </div>
 
@@ -164,61 +160,70 @@
 (() => {
 'use strict';
 
-const cv = document.getElementById('cv');
+const cv  = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-const W = cv.width, H = cv.height;
+
+/* ワールド座標は常にこの大きさ。表示はウィンドウに合わせて拡大縮小する */
+const W = 1000, H = 700;
 
 /* =========================================================
    1. コースデータ
    中心線は「多角形の頂点 [x, y, コーナー半径]」だけで書く。
    各頂点は指定半径の円弧でフィレットされ、頂点間は直線で結ばれる。
    → カーブが必ず一定半径になり、歪んだコーナーができない。
+
+   width  … アスファルト（縁石ラインの内側）の幅
+   runoff … 縁石ラインの外側にある減速ゾーンの幅。その外側が壁
    ========================================================= */
 const COURSES = [
-  {
-    name:'サンシャイン・オーバル',
-    diff:'かんたん',
-    desc:'幅の広い高速オーバル。<br>まずはここで操作に慣れよう。',
-    width:118,
-    ground:{ a:'#54a548', b:'#489a3d' },
-    pts:[ [700,135,135],[875,315,145],[800,565,135],[290,580,135],[125,330,145],[200,150,135] ]
-  },
   {
     name:'ベイサイド・サーキット',
     diff:'ふつう',
     desc:'ロングストレートとシケイン。<br>王道のフローイングコース。',
-    width:96,
+    width:88, runoff:18,
     ground:{ a:'#3f9d8e', b:'#369084' },
-    pts:[ [600,608,110],[880,515,100],[830,330,100],[905,170,100],[640,105,120],
-          [430,255, 95],[240,110,100],[ 90,300,120],[200,430,100],[150,590, 90] ]
+    pts:[ [600,592,110],[880,505,100],[830,325,100],[905,170,100],[640,105,120],
+          [430,255, 95],[240,110,100],[ 90,300,120],[200,425,100],[150,578, 90] ]
   },
   {
     name:'マウンテン・テクニカル',
     diff:'むずかしい',
-    desc:'S字・ヘアピン・切り返し。<br>連続コーナーの上級コース。',
-    width:84,
+    desc:'S字と切り返しの連続。<br>リズムが崩れると一気に遅れる。',
+    width:74, runoff:16,
     ground:{ a:'#7b7f5e', b:'#6e7254' },
-    pts:[ [820,585, 85],[915,485, 80],[740,375, 75],[895,235, 80],[790,120, 80],
-          [560,140, 85],[430,270, 75],[300,120, 80],[110,230, 90],[250,390, 75],
-          [105,520, 85],[210,615, 85] ]
+    pts:[ [820,570, 92],[915,470, 88],[740,365, 84],[895,230, 88],[790,118, 88],
+          [560,138, 92],[430,265, 84],[300,118, 88],[110,228, 96],[250,385, 84],
+          [105,510, 92],[210,600, 92] ]
+  },
+  {
+    name:'ラビリンス・サーキット',
+    diff:'最上級',
+    desc:'最も狭く長い13コーナー。<br>大きな切り返しが連続する最難関。',
+    width:64, runoff:14,
+    ground:{ a:'#3d4160', b:'#363a56' },
+    pts:[ [885,525, 78],[905,375, 74],[700,330, 70],[905,150, 70],[700, 95, 78],
+          [620,120, 74],[545,260, 70],[400,105, 74],[200,150, 78],[340,310, 70],
+          [130,420, 78],[110,510, 78],[230,600, 80] ]
   }
 ];
 
 const SKIN = {
-  road  :'#3b3e44',   // アスファルト
-  apron :'#e9dcb8',   // 路肩（クリーム）
-  kerbA :'#d93a2b',   // 縁石 赤
-  kerbB :'#f7f7f7',   // 縁石 白
-  lane  :'#e8ecf2',   // センターライン
-  tire  :'#2c3a2a'    // タイヤバリア
+  road :'#3b3e44',   // アスファルト
+  apron:'#e9dcb8',   // 減速ゾーン（路肩）
+  kerbA:'#d93a2b',   // 縁石 赤
+  kerbB:'#f7f7f7',   // 縁石 白
+  wall :'#9aa0ad',   // 壁
+  wallD:'#5c6270',
+  lane :'#e8ecf2',   // センターライン
+  tire :'#2c3a2a'
 };
 
 /* =========================================================
    2. 中心線の生成（直線 + 一定半径の円弧）
    ========================================================= */
-const STEP  = 6;    // 中心線サンプル間隔(px)
-const CPN   = 12;   // チェックポイント数
-const CAR_R = 13;   // 車の当たり半径
+const STEP  = 6;
+const CPN   = 12;
+const CAR_R = 13;
 
 function unit(a,b){ const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1; return [dx/l,dy/l,l]; }
 
@@ -229,9 +234,8 @@ function fitRadii(pts){
     for(let i=0;i<n;i++){
       const A=pts[(i-1+n)%n], B=pts[i], C=pts[(i+1)%n];
       const u1=unit(B,A), u2=unit(B,C);
-      let d=u1[0]*u2[0]+u1[1]*u2[1];
-      ph[i]=Math.acos(Math.max(-1,Math.min(1,d)));       // 内角
-      t[i]=r[i]/Math.tan(ph[i]/2);                        // 接線長
+      ph[i]=Math.acos(Math.max(-1,Math.min(1,u1[0]*u2[0]+u1[1]*u2[1])));
+      t[i]=r[i]/Math.tan(ph[i]/2);
     }
     let ok=true;
     for(let i=0;i<n;i++){
@@ -247,29 +251,26 @@ function fitRadii(pts){
   return {r,t,ph};
 }
 
-/** 直線と円弧のリストを作る */
 function buildSegs(pts){
   const n=pts.length, fit=fitRadii(pts);
   const P1=[],P2=[],CC=[];
   for(let i=0;i<n;i++){
     const A=pts[(i-1+n)%n], B=pts[i], C=pts[(i+1)%n];
     const u1=unit(B,A), u2=unit(B,C), t=fit.t[i];
-    P1[i]=[B[0]+u1[0]*t, B[1]+u1[1]*t];   // 入口の接点
-    P2[i]=[B[0]+u2[0]*t, B[1]+u2[1]*t];   // 出口の接点
+    P1[i]=[B[0]+u1[0]*t, B[1]+u1[1]*t];
+    P2[i]=[B[0]+u2[0]*t, B[1]+u2[1]*t];
     let bx=u1[0]+u2[0], by=u1[1]+u2[1];
-    const bl=Math.hypot(bx,by)||1;
-    const h=fit.r[i]/Math.sin(fit.ph[i]/2);
-    CC[i]=[B[0]+bx/bl*h, B[1]+by/bl*h];   // 円弧の中心
+    const bl=Math.hypot(bx,by)||1, h=fit.r[i]/Math.sin(fit.ph[i]/2);
+    CC[i]=[B[0]+bx/bl*h, B[1]+by/bl*h];
   }
   const segs=[];
   for(let i=0;i<n;i++){
     const s=P2[(i-1+n)%n], e=P1[i];
     const len=Math.hypot(e[0]-s[0], e[1]-s[1]);
     if(len>0.5) segs.push({t:'L', a:s, b:e, len});
-
     const c=CC[i], r=fit.r[i];
-    let a0=Math.atan2(P1[i][1]-c[1], P1[i][0]-c[0]);
-    let a1=Math.atan2(P2[i][1]-c[1], P2[i][0]-c[0]);
+    const a0=Math.atan2(P1[i][1]-c[1], P1[i][0]-c[0]);
+    const a1=Math.atan2(P2[i][1]-c[1], P2[i][0]-c[0]);
     let dd=a1-a0;
     while(dd> Math.PI) dd-=Math.PI*2;
     while(dd<-Math.PI) dd+=Math.PI*2;
@@ -282,8 +283,7 @@ function buildSegs(pts){
 function sampleLoop(segs, step){
   const total=segs.reduce((s,g)=>s+g.len,0);
   const count=Math.max(96, Math.round(total/step));
-  const ds=total/count;
-  const path=new Array(count);
+  const ds=total/count, path=new Array(count);
   let si=0, base=0;
   for(let i=0;i<count;i++){
     const s=i*ds;
@@ -294,11 +294,10 @@ function sampleLoop(segs, step){
       const dx=(g.b[0]-g.a[0])/g.len, dy=(g.b[1]-g.a[1])/g.len;
       x=g.a[0]+dx*u; y=g.a[1]+dy*u; tx=dx; ty=dy; k=0;
     }else{
-      const sgn=Math.sign(g.d)||1;
-      const ang=g.a0+sgn*(u/g.r);
+      const sgn=Math.sign(g.d)||1, ang=g.a0+sgn*(u/g.r);
       x=g.c[0]+Math.cos(ang)*g.r; y=g.c[1]+Math.sin(ang)*g.r;
       tx=-Math.sin(ang)*sgn; ty=Math.cos(ang)*sgn;
-      k=sgn/g.r;                       // 符号付き曲率（+ なら法線 n 側が内側）
+      k=sgn/g.r;
     }
     path[i]={x,y,tx,ty,nx:-ty,ny:tx,k};
   }
@@ -306,21 +305,23 @@ function sampleLoop(segs, step){
 }
 
 function buildTrack(def){
-  const {segs, radii} = buildSegs(def.pts);
-  const path = sampleLoop(segs, STEP);
+  const {segs, radii}=buildSegs(def.pts);
+  const path=sampleLoop(segs, STEP);
+  const line=def.width/2;
   return {
     ...def, path,
-    n: path.length,
-    half: def.width/2,
-    length: segs.reduce((s,g)=>s+g.len,0),
-    cpSize: path.length/CPN,
-    minR: Math.min(...radii)
+    n:path.length,
+    line,                       // 縁石ラインまで（アスファルト）
+    half:line+def.runoff,       // 壁まで
+    length:segs.reduce((s,g)=>s+g.len,0),
+    cpSize:path.length/CPN,
+    minR:Math.min(...radii)
   };
 }
 const TRACKS = COURSES.map(buildTrack);
 
 /* =========================================================
-   3. コース画像を一度だけ描く
+   3. 描画リソース（コース画像・地面タイル）
    ========================================================= */
 function strokeLoop(g, path, width, color, dash, offset){
   g.beginPath();
@@ -335,62 +336,77 @@ function strokeLoop(g, path, width, color, dash, offset){
   g.setLineDash(dash||[]); g.stroke(); g.setLineDash([]);
 }
 
-function renderTrackLayer(tk){
-  const cvs=document.createElement('canvas'); cvs.width=W; cvs.height=H;
-  const g=cvs.getContext('2d');
-  const path=tk.path, half=tk.half;
-
-  /* --- 地面 --- */
-  g.fillStyle=tk.ground.a; g.fillRect(0,0,W,H);
-  g.fillStyle=tk.ground.b;
-  for(let y=0;y<H;y+=26) for(let x=(y/26%2)*26;x<W;x+=52) g.fillRect(x,y,26,26);
-  g.fillStyle='rgba(0,0,0,.10)';
-  for(let i=0;i<260;i++){
-    const x=(i*137.5)%W, y=(i*211.7)%H;
-    g.beginPath(); g.arc(x,y,3+((i*53)%5),0,7); g.fill();
+/** 地面（背景）を敷き詰めるタイル */
+const GROUND_TILE = new Map();
+function groundPattern(gr){
+  const key=gr.a+gr.b;
+  if(!GROUND_TILE.has(key)){
+    const c=document.createElement('canvas'); c.width=c.height=52;
+    const g=c.getContext('2d');
+    g.fillStyle=gr.a; g.fillRect(0,0,52,52);
+    g.fillStyle=gr.b; g.fillRect(0,0,26,26); g.fillRect(26,26,26,26);
+    g.fillStyle='rgba(0,0,0,.10)';
+    for(const [x,y,r] of [[9,13,4],[38,7,3],[21,40,5],[45,33,3],[31,22,2]]){
+      g.beginPath(); g.arc(x,y,r,0,7); g.fill();
+    }
+    GROUND_TILE.set(key, ctx.createPattern(c,'repeat'));
   }
+  return GROUND_TILE.get(key);
+}
 
-  /* --- 路肩（クリーム）＋外周の影 --- */
-  g.save(); g.globalAlpha=.25; strokeLoop(g,path,half*2+40,'#000'); g.restore();
-  strokeLoop(g, path, half*2+32, SKIN.apron);
+/** コース画像（背景は透明）。rs は 1px あたりの描画解像度 */
+function renderTrackLayer(tk, rs){
+  const cvs=document.createElement('canvas');
+  cvs.width=Math.round(W*rs); cvs.height=Math.round(H*rs);
+  const g=cvs.getContext('2d');
+  g.scale(rs,rs);
+  const path=tk.path, line=tk.line, half=tk.half;
 
-  /* --- アスファルト（別キャンバスでノイズを乗せる） --- */
-  const ac=document.createElement('canvas'); ac.width=W; ac.height=H;
-  const a=ac.getContext('2d');
-  strokeLoop(a, path, half*2, SKIN.road);
+  // 壁 → 減速ゾーン → アスファルト の順に重ねる
+  g.save(); g.globalAlpha=.3; strokeLoop(g,path,half*2+16,'#000'); g.restore();
+  strokeLoop(g, path, half*2+9, SKIN.wallD);
+  strokeLoop(g, path, half*2+3, SKIN.wall);
+  strokeLoop(g, path, half*2,   SKIN.apron);
+
+  // アスファルト（別キャンバスでノイズを乗せる）
+  const ac=document.createElement('canvas');
+  ac.width=cvs.width; ac.height=cvs.height;
+  const a=ac.getContext('2d'); a.scale(rs,rs);
+  strokeLoop(a, path, line*2, SKIN.road);
+  a.setTransform(1,0,0,1,0,0);
   a.globalCompositeOperation='source-atop';
-  for(let i=0;i<26000;i++){
-    const x=Math.random()*W, y=Math.random()*H, v=Math.random();
-    a.fillStyle = v>.5 ? 'rgba(255,255,255,.045)' : 'rgba(0,0,0,.07)';
-    a.fillRect(x,y,1.6,1.6);
+  const dots=Math.round(20000*rs*rs);
+  for(let i=0;i<dots;i++){
+    a.fillStyle = Math.random()>.5 ? 'rgba(255,255,255,.045)' : 'rgba(0,0,0,.07)';
+    a.fillRect(Math.random()*ac.width, Math.random()*ac.height, 1.6*rs, 1.6*rs);
   }
   a.globalCompositeOperation='source-over';
-  g.drawImage(ac,0,0);
+  g.drawImage(ac,0,0,W,H);
 
-  /* --- 縁石（赤白の破線）：路肩の外寄りに沿わせる --- */
+  // 縁石ライン（アスファルトの縁ちょうど）。ここに触れると減速
   for(const s of [-1,1]){
-    const off=s*(half+11);
-    strokeLoop(g, path, 7, SKIN.kerbB, null, off);
-    strokeLoop(g, path, 7, SKIN.kerbA, [17,17], off);
+    strokeLoop(g, path, 7, SKIN.kerbB, null,    s*line);
+    strokeLoop(g, path, 7, SKIN.kerbA, [17,17], s*line);
   }
 
-  /* --- センターライン --- */
+  // センターライン
   strokeLoop(g, path, 3, SKIN.lane, [20,26]);
 
-  /* --- タイヤバリア（コーナー外側。他の路面に被らない場所だけ） --- */
+  // タイヤバリア（コーナー外側。他の路面に被らない場所だけ）
   const tires=[];
   const clear=(x,y)=>{
+    if(x<10||x>W-10||y<10||y>H-10) return false;
     for(let i=0;i<tk.n;i+=2){
       const p=path[i];
-      if((p.x-x)**2+(p.y-y)**2 < (half+21)**2) return false;
+      if((p.x-x)**2+(p.y-y)**2 < (half+20)**2) return false;
     }
-    return x>8 && x<W-8 && y>8 && y<H-8;
+    return true;
   };
   for(let i=0;i<tk.n;i+=3){
     const p=path[i];
-    if(Math.abs(p.k) < 1/175) continue;              // ゆるいカーブは置かない
-    const s=-Math.sign(p.k);                          // 外側
-    const x=p.x+p.nx*s*(half+27), y=p.y+p.ny*s*(half+27);
+    if(Math.abs(p.k) < 1/190) continue;
+    const s=-Math.sign(p.k);
+    const x=p.x+p.nx*s*(half+26), y=p.y+p.ny*s*(half+26);
     if(!clear(x,y)) continue;
     if(tires.some(t=>(t[0]-x)**2+(t[1]-y)**2 < 15*15)) continue;
     tires.push([x,y]);
@@ -401,22 +417,46 @@ function renderTrackLayer(tk){
     g.fillStyle='rgba(255,255,255,.13)'; g.beginPath(); g.arc(x,y,3.4,0,7); g.fill();
   }
 
-  /* --- スタート／フィニッシュ --- */
-  const s0=path[0], cell=(half*2)/8;
+  // スタート／フィニッシュ
+  const s0=path[0], cell=(line*2)/8;
   g.save();
   g.translate(s0.x,s0.y); g.rotate(Math.atan2(s0.ty,s0.tx));
   for(let r=0;r<3;r++) for(let q=0;q<8;q++){
     g.fillStyle=((r+q)%2)?'#15161a':'#f4f6fa';
-    g.fillRect(-12+r*8, -half+q*cell, 8, cell);
+    g.fillRect(-12+r*8, -line+q*cell, 8, cell);
   }
   g.restore();
-
   return cvs;
 }
-const LAYERS = TRACKS.map(renderTrackLayer);
+
+/* コース画像のキャッシュ（表示倍率が変わったら作り直す） */
+let layerCache={idx:-1, rs:0, img:null};
+function getLayer(i){
+  const rs=Math.min(2, Math.max(1, VIEW.s*VIEW.dpr));
+  if(layerCache.idx!==i || Math.abs(layerCache.rs-rs)>0.02){
+    layerCache={idx:i, rs, img:renderTrackLayer(TRACKS[i], rs)};
+  }
+  return layerCache.img;
+}
 
 /* =========================================================
-   4. 車
+   4. 表示（ウィンドウいっぱいに使う）
+   ========================================================= */
+let VIEW={s:1, ox:0, oy:0, cw:W, ch:H, dpr:1};
+function resize(){
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  const cw=window.innerWidth, ch=window.innerHeight;
+  cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr);
+  const s=Math.min(cw/W, ch/H);
+  VIEW={s, ox:(cw-W*s)/2, oy:(ch-H*s)/2, cw, ch, dpr};
+  layerCache.idx=-1;                       // 解像度が変わるので作り直す
+  drawMinimaps();
+}
+let resizeTimer=0;
+addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(resize,150); });
+
+/* =========================================================
+   5. 車
    ========================================================= */
 const CAR_COLORS = [
   {body:'#ff4d5a', dark:'#b4232f', name:'1P'},
@@ -429,8 +469,10 @@ const PHYS = {
   accel:0.118, brake:0.20, revAccel:0.055,
   maxSpeed:5.05, drag:0.986, grip:0.145,
   turn:0.052,
-  wallBounce:0.30,     // 壁の反発
-  wallScrape:0.055     // 壁ずりの減速（当たりの強さに比例）
+  runoffDrag:0.040,    // 減速ゾーンでの追加ドラッグ（外へ行くほど強い）
+  runoffGrip:0.45,     // 減速ゾーンでのグリップ低下
+  wallBounce:0.30,
+  wallScrape:0.055
 };
 
 class Car{
@@ -442,8 +484,8 @@ class Car{
   }
   reset(){
     this.x=0;this.y=0;this.a=0;this.vx=0;this.vy=0;
-    this.lap=0; this.cp=0; this.cpSeen=0; this.node=0; this.off=0;
-    this.finished=false; this.finishTime=0; this.rank=0;
+    this.lap=0; this.cp=0; this.cpSeen=0; this.node=0; this.off=0; this.runoff=0;
+    this.finished=false; this.finishTime=0; this.rank=0; this.gone=false;
     this.lapTimes=[]; this.best=Infinity; this.lapStart=0;
     this.hit=0; this.fx=null; this.trail=[];
   }
@@ -451,14 +493,16 @@ class Car{
 }
 
 /* =========================================================
-   5. ゲーム状態
+   6. ゲーム状態
    ========================================================= */
 const G = {
   mode:'title', players:1, courseIdx:0, totalLaps:5,
-  track:null, layer:null,
+  track:null,
   cars:[], countdown:0, raceTime:0,
   finishOrder:[], last:0, acc:0, shake:0
 };
+/** 画面に残っている車（ゴールした CPU は消える） */
+function active(){ return G.cars.filter(c=>!c.gone); }
 
 const keys = Object.create(null);
 addEventListener('keydown', e=>{
@@ -490,25 +534,24 @@ function beep(freq, dur=0.12, type='square', vol=0.16){
 }
 
 /* =========================================================
-   6. レース開始
+   7. レース開始
    ========================================================= */
 function startRace(){
-  const tk = TRACKS[G.courseIdx];
-  G.track=tk; G.layer=LAYERS[G.courseIdx];
+  const tk=TRACKS[G.courseIdx];
+  G.track=tk;
 
   const CAR_COUNT=4, rows=CAR_COUNT/2;
   G.cars=[];
   for(let i=0;i<CAR_COUNT;i++){
-    const isCPU = i>=G.players;
-    const skill = isCPU ? ([0.98,0.95,0.92][i-G.players] ?? 0.90) : 1;
+    const isCPU=i>=G.players;
+    const skill=isCPU ? ([0.98,0.95,0.92][i-G.players] ?? 0.90) : 1;
     G.cars.push(new Car(i, isCPU, skill));
   }
-  // グリッド：2列×2行。前列がプレイヤー。全車ともスタートライン直後（CP0内）
   G.cars.forEach((car,i)=>{
     const row=Math.floor(i/2), side=(i%2)?1:-1;
     const node=(10+(rows-1-row)*13)%tk.n;
     const p=tk.path[node];
-    const off=side*Math.min(tk.half-CAR_R-2, tk.half*0.42);
+    const off=side*Math.min(tk.line-CAR_R-2, tk.line*0.45);
     car.reset();
     car.x=p.x+p.nx*off; car.y=p.y+p.ny*off;
     car.a=Math.atan2(p.ty,p.tx);
@@ -521,7 +564,7 @@ function startRace(){
 }
 
 /* =========================================================
-   7. コース上の位置（最寄りノードを局所探索）
+   8. コース上の位置
    ========================================================= */
 function nearestNode(tk, car){
   const n=tk.n;
@@ -531,7 +574,7 @@ function nearestNode(tk, car){
     const dd=(p.x-car.x)**2+(p.y-car.y)**2;
     if(dd<best){ best=dd; bi=i; }
   }
-  if(best > (tk.half+120)**2){                 // 念のための全探索リカバリ
+  if(best > (tk.half+120)**2){
     for(let i=0;i<n;i++){
       const p=tk.path[i], dd=(p.x-car.x)**2+(p.y-car.y)**2;
       if(dd<best){ best=dd; bi=i; }
@@ -541,7 +584,7 @@ function nearestNode(tk, car){
 }
 
 /* =========================================================
-   8. 更新
+   9. 更新
    ========================================================= */
 const DT = 1/60;
 
@@ -560,16 +603,17 @@ function update(){
   if(G.mode!=='race') return;
 
   G.raceTime+=DT;
+  const cars=active();
 
-  for(const car of G.cars){ if(!car.finished) drive(car,tk); integrate(car); }
-  carCollisions();
-  for(const car of G.cars){
+  for(const car of cars){ if(!car.finished) drive(car,tk); integrate(car,tk); }
+  carCollisions(cars);
+  for(const car of cars){
     car.node=nearestNode(tk,car);
-    wallCollision(car,tk);
+    surface(car,tk);
     if(car.hit>0) car.hit--;
     if(car.fx){ car.fx.life--; if(car.fx.life<=0) car.fx=null; }
   }
-  for(const car of G.cars) progress(car,tk);
+  for(const car of cars) progress(car,tk);
 
   if(G.cars.slice(0,G.players).every(c=>c.finished)) finishRace();
 }
@@ -593,7 +637,7 @@ function aiControl(car, tk){
   const look=Math.round(7+spd*3.6);
   const tgt=tk.path[(car.node+look)%n];
 
-  // 先の最小旋回半径から上限速度を出す（半径が厳密に分かるので精度が高い）
+  // 先の最小旋回半径から上限速度を出す
   let kMax=0;
   for(let d=3; d<look+20; d++){
     const k=Math.abs(tk.path[(car.node+d)%n].k);
@@ -602,14 +646,13 @@ function aiControl(car, tk){
   const R = kMax>1e-6 ? 1/kMax : 1e6;
   const target = Math.min(PHYS.maxSpeed, PHYS.turn*R*0.90)*car.skill;
 
-  // ライン取り：コーナー内側 ＋ 車ごとのレーンの癖
+  // ライン取りはアスファルトの内側に収める
+  const lim=tk.line-CAR_R;
   const bend=Math.min(1, Math.abs(tgt.k)*230);
-  const inner=Math.sign(tgt.k)*tk.half*0.46*bend;
-  let offset=inner + car.lane*tk.half*(1-bend);
-  // 壁が近ければ内側へ寄せる
-  const lim=tk.half-CAR_R;
-  if(Math.abs(car.off) > lim*0.8) offset = -Math.sign(car.off)*tk.half*0.25;
-  offset=Math.max(-lim*0.85, Math.min(lim*0.85, offset));
+  const inner=Math.sign(tgt.k)*lim*0.55*bend;
+  let offset=inner + car.lane*lim*(1-bend);
+  if(Math.abs(car.off) > lim*0.85) offset = -Math.sign(car.off)*lim*0.3;
+  offset=Math.max(-lim*0.9, Math.min(lim*0.9, offset));
 
   const tx=tgt.x+tgt.nx*offset, ty=tgt.y+tgt.ny*offset;
   const diff=norm(Math.atan2(ty-car.y, tx-car.x)-car.a);
@@ -619,9 +662,10 @@ function aiControl(car, tk){
 }
 
 /* ---------- 物理 ---------- */
-function integrate(car){
+function integrate(car, tk){
   const th=car.finished?-0.35:(car.throttle||0);
   const st=car.finished?0:(car.steer||0);
+  const ro=car.runoff;                       // 0=路面上 1=壁ぎわ
 
   const fx=Math.cos(car.a), fy=Math.sin(car.a);
   const fwd=car.vx*fx+car.vy*fy;
@@ -630,16 +674,18 @@ function integrate(car){
   else if(th<0) { const a=(fwd>0.05?PHYS.brake:PHYS.revAccel)*(-th); car.vx-=fx*a; car.vy-=fy*a; }
 
   // 舵の効き。壁に押しつけて止まっても、アクセルを踏んでいれば向きは変えられる
-  // （これが無いと壁に鼻から刺さったまま脱出できなくなる）
   const eff=Math.min(1, Math.max(Math.abs(fwd)/1.25, Math.abs(th)*0.5));
   car.a += st*PHYS.turn*eff*(fwd<-0.05?-1:1);
 
-  // 横滑りをグリップ分だけ吸収（残りがドリフト感）
+  // 横滑りをグリップ分だけ吸収（減速ゾーンでは滑りやすい）
+  const grip=PHYS.grip*(1-PHYS.runoffGrip*ro);
   const lat=car.vx*(-fy)+car.vy*fx;
-  car.vx-=(-fy)*lat*(PHYS.grip*6.2);
-  car.vy-=( fx)*lat*(PHYS.grip*6.2);
+  car.vx-=(-fy)*lat*(grip*6.2);
+  car.vy-=( fx)*lat*(grip*6.2);
 
-  car.vx*=PHYS.drag; car.vy*=PHYS.drag;
+  // 減速ゾーンでは余分に減速する
+  const drag=PHYS.drag - PHYS.runoffDrag*ro;
+  car.vx*=drag; car.vy*=drag;
 
   const sp=Math.hypot(car.vx,car.vy);
   if(sp>PHYS.maxSpeed){ car.vx*=PHYS.maxSpeed/sp; car.vy*=PHYS.maxSpeed/sp; }
@@ -654,21 +700,23 @@ function integrate(car){
   while(car.trail.length && car.trail[0].life<=0) car.trail.shift();
 }
 
-/* ---------- 壁（コース外）との衝突 ---------- */
-function wallCollision(car, tk){
+/* ---------- 路面判定：縁石ラインで減速、その外は壁 ---------- */
+function surface(car, tk){
   const p=tk.path[car.node];
-  const off=(car.x-p.x)*p.nx + (car.y-p.y)*p.ny;   // 中心線からの横位置
+  const off=(car.x-p.x)*p.nx + (car.y-p.y)*p.ny;
   car.off=off;
+
+  // 車体が縁石ラインに触れた分だけ減速ゾーン扱い
+  const over=Math.abs(off)+CAR_R*0.55-tk.line;
+  car.runoff = over<=0 ? 0 : Math.min(1, over/tk.runoff);
+
   const lim=tk.half-CAR_R;
   if(Math.abs(off)<=lim) return;
 
   const s=Math.sign(off);
-  // 壁の内側へ押し戻す
-  const push=off-s*lim;
-  car.x-=p.nx*push; car.y-=p.ny*push;
+  car.x-=p.nx*(off-s*lim); car.y-=p.ny*(off-s*lim);
   car.off=s*lim;
 
-  // 法線方向の速度を反発させ、接線方向も擦れて減速
   const vn=car.vx*p.nx+car.vy*p.ny;
   if(vn*s>0){
     const imp=vn*(1+PHYS.wallBounce);
@@ -683,16 +731,15 @@ function wallCollision(car, tk){
       }
     }
   }
-  // 壁ずりの減速は当たりの強さに比例（軽く触れただけならほとんど減速しない）
   const f=1-Math.min(0.14, Math.abs(vn)*PHYS.wallScrape);
   car.vx*=f; car.vy*=f;
 }
 
 /* ---------- 車同士 ---------- */
-function carCollisions(){
+function carCollisions(cars){
   const R=CAR_R+2;
-  for(let i=0;i<G.cars.length;i++) for(let j=i+1;j<G.cars.length;j++){
-    const a=G.cars[i], b=G.cars[j];
+  for(let i=0;i<cars.length;i++) for(let j=i+1;j<cars.length;j++){
+    const a=cars[i], b=cars[j];
     const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy);
     if(d>0 && d<R*2){
       const ux=dx/d, uy=dy/d, push=(R*2-d)/2;
@@ -724,6 +771,7 @@ function progress(car, tk){
       if(car.lap>=G.totalLaps){
         car.finished=true; car.finishTime=t;
         G.finishOrder.push(car); car.rank=G.finishOrder.length;
+        if(car.isCPU) car.gone=true;          // ゴールした CPU は画面から消す
       }
     }
   }else if(cp===(car.cp-1+CPN)%CPN){
@@ -749,33 +797,47 @@ function rankings(){
 }
 
 /* =========================================================
-   9. 描画
+   10. 描画
    ========================================================= */
 function draw(){
-  if(!G.track){ drawIdle(); return; }
+  const dpr=VIEW.dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const tk=G.track || TRACKS[G.courseIdx];
+  ctx.fillStyle=groundPattern(tk.ground);
+  ctx.fillRect(0,0,VIEW.cw,VIEW.ch);
 
   ctx.save();
   if(G.shake>0){
-    ctx.translate((Math.random()-.5)*G.shake*7, (Math.random()-.5)*G.shake*7);
+    ctx.translate((Math.random()-.5)*G.shake*7*VIEW.s, (Math.random()-.5)*G.shake*7*VIEW.s);
   }
-  ctx.drawImage(G.layer,0,0);
+  ctx.translate(VIEW.ox, VIEW.oy);
+  ctx.scale(VIEW.s, VIEW.s);
 
-  // タイヤ痕
-  for(const car of G.cars){
-    for(const t of car.trail){
-      ctx.globalAlpha=t.life*0.30;
-      ctx.fillStyle='#101216';
-      const dx=Math.cos(t.a+Math.PI/2)*5, dy=Math.sin(t.a+Math.PI/2)*5;
-      ctx.fillRect(t.x+dx-1.5,t.y+dy-1.5,3,3);
-      ctx.fillRect(t.x-dx-1.5,t.y-dy-1.5,3,3);
+  ctx.drawImage(getLayer(G.courseIdx), 0,0,W,H);
+
+  if(G.track){
+    const cars=active();
+    for(const car of cars){
+      for(const t of car.trail){
+        ctx.globalAlpha=t.life*0.30;
+        ctx.fillStyle='#101216';
+        const dx=Math.cos(t.a+Math.PI/2)*5, dy=Math.sin(t.a+Math.PI/2)*5;
+        ctx.fillRect(t.x+dx-1.5,t.y+dy-1.5,3,3);
+        ctx.fillRect(t.x-dx-1.5,t.y-dy-1.5,3,3);
+      }
     }
+    ctx.globalAlpha=1;
+    for(const car of cars) drawCar(car);
+    for(const car of cars) if(car.fx) drawSpark(car.fx);
   }
-  ctx.globalAlpha=1;
-
-  for(const car of G.cars) drawCar(car);
-  for(const car of G.cars) if(car.fx) drawSpark(car.fx);
   ctx.restore();
 
+  if(!G.track){                       // タイトル画面：コースを暗く見せる
+    ctx.fillStyle='rgba(10,12,18,.35)';
+    ctx.fillRect(0,0,VIEW.cw,VIEW.ch);
+    return;
+  }
   drawHUD();
   if(G.mode==='count') drawCountdown();
 }
@@ -792,38 +854,78 @@ function drawSpark(fx){
 }
 
 function drawCar(c){
+  // 減速ゾーンでは砂ぼこり
+  if(c.runoff>0 && c.speed>1){
+    ctx.save(); ctx.globalAlpha=Math.min(.5, c.runoff*0.5);
+    ctx.fillStyle='#e9dcb8';
+    for(let i=0;i<4;i++){
+      const a=c.a+Math.PI+(i-1.5)*0.35;
+      ctx.beginPath(); ctx.arc(c.x+Math.cos(a)*(14+i*5), c.y+Math.sin(a)*(14+i*5), 4-i*0.6, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 車体は +x が前。前は尖ってヘッドライト、後ろは幅広ウイングとテールランプ
   ctx.save();
-  ctx.translate(c.x, c.y);
-  ctx.rotate(c.a);
+  ctx.translate(c.x, c.y); ctx.rotate(c.a);
 
   ctx.fillStyle='rgba(0,0,0,.34)';
-  roundRect(-12,-8,26,16,4); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-1,2,15,9,0,0,7); ctx.fill();
 
+  // タイヤ：後ろは太く、前は細い
   ctx.fillStyle='#15171d';
-  ctx.fillRect(-11,-10,7,4); ctx.fillRect(-11,6,7,4);
-  ctx.fillRect(5,-10,7,4);   ctx.fillRect(5,6,7,4);
+  ctx.fillRect(-11,-11,9,5); ctx.fillRect(-11,6,9,5);
+  ctx.fillRect(3,-9.5,6,3.5); ctx.fillRect(3,6,6,3.5);
 
+  // リアウイング（黒く幅広）＋テールランプ
+  ctx.fillStyle='#14161c';
+  roundRect(-18,-11,6,22,2); ctx.fill();
+  ctx.fillStyle='#ff3b28';
+  roundRect(-17.5,-8.5,4,5.5,1.2); ctx.fill();
+  roundRect(-17.5, 3,  4,5.5,1.2); ctx.fill();
+
+  // ボディ：後ろは角張り、前は細く尖る
   ctx.fillStyle=c.hit>0 ? '#fff' : c.col.body;
-  roundRect(-14,-8.5,28,17,5); ctx.fill();
-  ctx.fillStyle=c.col.dark;
-  roundRect(-14,-8.5,7,17,4); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(18,0);
+  ctx.lineTo(13,-3.2); ctx.lineTo(9,-6.5); ctx.lineTo(2,-8.5);
+  ctx.lineTo(-11,-9.5); ctx.lineTo(-12.5,-8);
+  ctx.lineTo(-12.5,8); ctx.lineTo(-11,9.5);
+  ctx.lineTo(2,8.5); ctx.lineTo(9,6.5); ctx.lineTo(13,3.2);
+  ctx.closePath(); ctx.fill();
 
-  ctx.fillStyle='rgba(16,20,30,.85)';
-  roundRect(-3,-5.5,9,11,3); ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.22)';
-  roundRect(-12,-8,24,4,3); ctx.fill();
+  // フロントウイング（細め）
   ctx.fillStyle=c.col.dark;
-  ctx.fillRect(-16,-7,3,14);
+  roundRect(8.5,-8.5,3.5,17,1.5); ctx.fill();
+
+  // コックピット（後ろ寄り）
+  ctx.fillStyle='rgba(12,16,26,.9)';
+  ctx.beginPath();
+  ctx.moveTo(4,0); ctx.lineTo(0,-4.6); ctx.lineTo(-8,-4.6); ctx.lineTo(-8,4.6); ctx.lineTo(0,4.6);
+  ctx.closePath(); ctx.fill();
+
+  // ヘッドライト（先端の左右）＋前向き矢印
+  ctx.fillStyle='#fffbe6';
+  ctx.beginPath(); ctx.arc(13.6,-2.6,1.7,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(13.6, 2.6,1.7,0,7); ctx.fill();
+  ctx.fillStyle='#f2f6ff';
+  ctx.beginPath();
+  ctx.moveTo(8,0); ctx.lineTo(3.5,-3.4); ctx.lineTo(3.5,3.4);
+  ctx.closePath(); ctx.fill();
+
+  // 上面のハイライト
+  ctx.fillStyle='rgba(255,255,255,.18)';
+  ctx.beginPath();
+  ctx.moveTo(9,-6); ctx.lineTo(-11,-8); ctx.lineTo(-11,-5.5); ctx.lineTo(9,-4);
+  ctx.closePath(); ctx.fill();
   ctx.restore();
 
   if(!c.isCPU){
     ctx.save();
     ctx.font='700 11px system-ui,sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillStyle='rgba(0,0,0,.6)';
-    roundRect(c.x-13, c.y-30, 26, 15, 4); ctx.fill();
-    ctx.fillStyle=c.col.body;
-    ctx.fillText(c.col.name, c.x, c.y-22.5);
+    ctx.fillStyle='rgba(0,0,0,.6)'; roundRect(c.x-13, c.y-30, 26, 15, 4); ctx.fill();
+    ctx.fillStyle=c.col.body; ctx.fillText(c.col.name, c.x, c.y-22.5);
     ctx.restore();
   }
 }
@@ -841,51 +943,47 @@ function fmt(t){
 }
 
 function drawHUD(){
+  const u=Math.max(1, Math.min(1.7, VIEW.s));    // HUD の拡大率
   ctx.save();
+  ctx.setTransform(VIEW.dpr,0,0,VIEW.dpr,0,0);
+  ctx.scale(u,u);
+  const w=VIEW.cw/u;
   ctx.textBaseline='top';
   const list=rankings();
 
   G.cars.slice(0,G.players).forEach((c,i)=>{
     const y=12+i*54;
-    ctx.fillStyle='rgba(8,10,16,.66)';
-    roundRect(12,y,206,46,9); ctx.fill();
+    ctx.fillStyle='rgba(8,10,16,.66)'; roundRect(12,y,210,46,9); ctx.fill();
     ctx.fillStyle=c.col.body; roundRect(12,y,5,46,3); ctx.fill();
-
     const pos=list.indexOf(c)+1;
     ctx.textAlign='left';
-    ctx.fillStyle=c.col.body;
-    ctx.font='800 14px system-ui,sans-serif';
+    ctx.fillStyle=c.col.body; ctx.font='800 14px system-ui,sans-serif';
     ctx.fillText(c.col.name, 26, y+7);
-    ctx.fillStyle='#e8ecf4';
-    ctx.font='800 17px system-ui,sans-serif';
+    ctx.fillStyle='#e8ecf4'; ctx.font='800 17px system-ui,sans-serif';
     ctx.fillText(`${pos}位`, 62, y+5);
-    ctx.font='700 13px system-ui,sans-serif';
-    ctx.fillStyle='#98a2b8';
+    ctx.font='700 13px system-ui,sans-serif'; ctx.fillStyle='#98a2b8';
     ctx.fillText(`LAP ${Math.min(c.lap+1,G.totalLaps)}/${G.totalLaps}`, 110, y+7);
-    ctx.fillStyle='#7f8aa3';
-    ctx.font='600 11px system-ui,sans-serif';
+    ctx.fillStyle='#7f8aa3'; ctx.font='600 11px system-ui,sans-serif';
     ctx.fillText(`BEST ${fmt(c.best)}`, 26, y+27);
-    if(c.hit>0 && !c.finished){
-      ctx.fillStyle='#ff6b5a';
-      ctx.fillText('ウォール接触！', 132, y+27);
+    if(!c.finished){
+      if(c.hit>0){ ctx.fillStyle='#ff6b5a'; ctx.fillText('ウォール接触！', 128, y+27); }
+      else if(c.runoff>0){ ctx.fillStyle='#ffd23f'; ctx.fillText('コースアウト減速', 128, y+27); }
     }
   });
 
   ctx.textAlign='right';
-  ctx.fillStyle='rgba(8,10,16,.66)';
-  roundRect(W-176,12,164,30+list.length*20,9); ctx.fill();
-  ctx.fillStyle='#e8ecf4';
-  ctx.font='800 18px system-ui,sans-serif';
-  ctx.fillText(fmt(G.raceTime), W-22, 17);
+  ctx.fillStyle='rgba(8,10,16,.66)'; roundRect(w-176,12,164,30+list.length*20,9); ctx.fill();
+  ctx.fillStyle='#e8ecf4'; ctx.font='800 18px system-ui,sans-serif';
+  ctx.fillText(fmt(G.raceTime), w-22, 17);
   ctx.font='600 12px system-ui,sans-serif';
   list.forEach((c,i)=>{
     const y=44+i*20;
     ctx.textAlign='left';
-    ctx.fillStyle=c.col.body; ctx.fillRect(W-166,y+3,8,8);
+    ctx.fillStyle=c.col.body; ctx.fillRect(w-166,y+3,8,8);
     ctx.fillStyle=c.finished?'#ffd23f':(c.isCPU?'#98a2b8':'#e8ecf4');
-    ctx.fillText(`${i+1}. ${c.isCPU?'CPU '+(c.idx+1):c.col.name}`, W-152, y);
+    ctx.fillText(`${i+1}. ${c.isCPU?'CPU '+(c.idx+1):c.col.name}`, w-152, y);
     ctx.textAlign='right';
-    ctx.fillText(c.finished?'FIN':`L${Math.min(c.lap+1,G.totalLaps)}`, W-22, y);
+    ctx.fillText(c.finished?'FIN':`L${Math.min(c.lap+1,G.totalLaps)}`, w-22, y);
   });
   ctx.restore();
 }
@@ -893,24 +991,20 @@ function drawHUD(){
 function drawCountdown(){
   const n=Math.ceil(G.countdown), frac=G.countdown-Math.floor(G.countdown);
   ctx.save();
+  ctx.setTransform(VIEW.dpr,0,0,VIEW.dpr,0,0);
   ctx.textAlign='center'; ctx.textBaseline='middle';
   const txt=n>0?String(Math.min(n,3)):'GO!';
-  ctx.translate(W/2,H/2);
-  ctx.scale(1+(1-frac)*0.35, 1+(1-frac)*0.35);
+  ctx.translate(VIEW.cw/2, VIEW.ch/2);
+  const k=(1+(1-frac)*0.35)*Math.max(1,VIEW.s);
+  ctx.scale(k,k);
   ctx.font='900 110px system-ui,sans-serif';
   ctx.lineWidth=10; ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.strokeText(txt,0,0);
   ctx.fillStyle=n>0?'#fff':'#54ff92'; ctx.fillText(txt,0,0);
   ctx.restore();
 }
 
-function drawIdle(){
-  ctx.drawImage(LAYERS[G.courseIdx],0,0);
-  ctx.fillStyle='rgba(10,12,18,.35)';
-  ctx.fillRect(0,0,W,H);
-}
-
 /* =========================================================
-   10. ループ
+   11. ループ
    ========================================================= */
 function loop(ts){
   requestAnimationFrame(loop);
@@ -921,38 +1015,49 @@ function loop(ts){
   while(G.acc>=DT){ update(); G.acc-=DT; }
   draw();
 }
-requestAnimationFrame(loop);
 
 /* =========================================================
-   11. UI
+   12. UI
    ========================================================= */
 const scr={
   title:document.getElementById('scrTitle'),
   pause:document.getElementById('scrPause'),
   result:document.getElementById('scrResult')
 };
-function showScreen(name){ for(const k in scr) scr[k].hidden=(k!==name); }
+const hintEl=document.getElementById('hint');
+function showScreen(name){
+  for(const k in scr) scr[k].hidden=(k!==name);
+  hintEl.style.display = name ? 'none' : '';    // レース中だけ表示
+}
 
 const coursesEl=document.getElementById('courses');
 COURSES.forEach((c,i)=>{
   const b=document.createElement('button');
-  b.className='card'+(i===0?' sel':''); b.dataset.c=i;
-  b.innerHTML=`<canvas class="mini" width="120" height="84"></canvas>
+  b.className='card course'+(i===0?' sel':''); b.dataset.c=i;
+  b.innerHTML=`<canvas class="mini"></canvas>
     <div class="t">${c.name}</div>
     <div class="d">${c.diff}<br>${c.desc}</div>`;
   coursesEl.appendChild(b);
-  const m=b.querySelector('.mini').getContext('2d');
-  const tk=TRACKS[i], s=Math.min(120/W, 84/H);
-  m.fillStyle=c.ground.a; m.fillRect(0,0,120,84);
-  m.save(); m.translate((120-W*s)/2,(84-H*s)/2); m.scale(s,s);
-  m.lineJoin='round'; m.lineCap='round';
-  m.beginPath();
-  for(let k=0;k<=tk.n;k+=2){ const p=tk.path[k%tk.n]; k?m.lineTo(p.x,p.y):m.moveTo(p.x,p.y); }
-  m.closePath();
-  m.lineWidth=c.width+22; m.strokeStyle=SKIN.apron; m.stroke();
-  m.lineWidth=c.width;    m.strokeStyle=SKIN.road;  m.stroke();
-  m.restore();
 });
+function drawMinimaps(){
+  document.querySelectorAll('#courses .mini').forEach((el,i)=>{
+    const r=el.getBoundingClientRect();
+    const mw=Math.max(60, Math.round(r.width)), mh=Math.max(40, Math.round(r.height));
+    el.width=mw*2; el.height=mh*2;
+    const m=el.getContext('2d'); m.scale(2,2);
+    const tk=TRACKS[i], s=Math.min(mw/W, mh/H);
+    m.fillStyle=COURSES[i].ground.a; m.fillRect(0,0,mw,mh);
+    m.save(); m.translate((mw-W*s)/2,(mh-H*s)/2); m.scale(s,s);
+    m.lineJoin='round'; m.lineCap='round';
+    const p=k=>{ m.beginPath();
+      for(let j=0;j<=tk.n;j+=2){ const q=tk.path[j%tk.n]; j?m.lineTo(q.x,q.y):m.moveTo(q.x,q.y); }
+      m.closePath(); m.lineWidth=k.w; m.strokeStyle=k.c; m.stroke(); };
+    p({w:tk.half*2+8, c:SKIN.wallD});
+    p({w:tk.half*2,   c:SKIN.apron});
+    p({w:tk.line*2,   c:SKIN.road});
+    m.restore();
+  });
+}
 
 function pickGroup(id, attr, cb){
   const el=document.getElementById(id);
@@ -963,7 +1068,7 @@ function pickGroup(id, attr, cb){
   });
 }
 pickGroup('players','p', v=>G.players=+v);
-pickGroup('courses','c', v=>G.courseIdx=+v);
+pickGroup('courses','c', v=>{ G.courseIdx=+v; layerCache.idx=-1; });
 pickGroup('laps','l',    v=>G.totalLaps=+v);
 
 document.getElementById('btnStart').onclick   = ()=>startRace();
@@ -975,7 +1080,7 @@ document.getElementById('btnMenu3').onclick   = toTitle;
 
 function pause(){ G.mode='pause'; showScreen('pause'); }
 function resume(){ G.mode='race'; showScreen(null); }
-function toTitle(){ G.mode='title'; G.track=null; showScreen('title'); }
+function toTitle(){ G.mode='title'; G.track=null; showScreen('title'); drawMinimaps(); }
 
 function showResult(){
   const list=[...G.finishOrder], top=list[0];
@@ -996,8 +1101,10 @@ function showResult(){
   showScreen('result');
 }
 
-document.getElementById('hint').textContent='コース外は壁　P:ポーズ / R:やり直し / Esc:メニュー';
+hintEl.textContent='縁石ラインの外は減速／さらに外は壁　P:ポーズ R:やり直し Esc:メニュー';
+resize();
 showScreen('title');
+requestAnimationFrame(loop);
 })();
 </script>
 </body>
