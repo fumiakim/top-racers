@@ -572,7 +572,7 @@ class Car{
   reset(){
     this.x=0;this.y=0;this.a=0;this.vx=0;this.vy=0;
     this.lap=0; this.cp=0; this.cpSeen=0; this.node=0; this.off=0; this.runoff=0;
-    this.z=0; this.slip=0;
+    this.z=0; this.onBr=false; this.slip=0;
     this.finished=false; this.finishTime=0; this.rank=0; this.gone=false;
     this.lapTimes=[]; this.best=Infinity; this.lapStart=0;
     this.hit=0; this.fx=null; this.trail=[];
@@ -886,10 +886,19 @@ function integrate(car, tk){
 }
 
 /* ---------- 路面判定：縁石ラインで減速、その外は壁 ---------- */
+/** 橋レイヤーが覆う区間にいるか（傾斜路も含む。手前数ノードは余裕を見る） */
+function onBridge(car, tk){
+  const br=tk.bridge; if(!br) return false;
+  const n=tk.n;
+  const d=((car.node-br.b0)%n+n)%n;
+  const len=((br.b1-br.b0)%n+n)%n;
+  return d<=len+6 || d>=n-6;
+}
+
 function surface(car, tk){
   const p=tk.path[car.node];
   const off=(car.x-p.x)*p.nx + (car.y-p.y)*p.ny;
-  car.off=off; car.z=p.z;
+  car.off=off; car.z=p.z; car.onBr=onBridge(car,tk);
 
   // 車体が縁石ラインに触れた分だけ減速ゾーン扱い
   const over=Math.abs(off)+CAR_R*0.55-tk.line;
@@ -1005,21 +1014,25 @@ function draw(){
 
   if(G.track){
     const cars=active();
+    // 橋レイヤーは傾斜路まで覆うので、その区間にいる車は必ず橋の後に描く
+    // （z>=0.5 で分けると、傾斜路の車が橋に塗りつぶされて一瞬消える）
     for(const car of cars){
-      if(car.z>=0.5) continue;                 // 橋の上のタイヤ痕は橋を描いた後
+      if(car.onBr) continue;
       for(const t of car.trail) drawTrail(t);
     }
     ctx.globalAlpha=1;
-    // 橋の下 → 橋 → 橋の上 の順に描く
-    for(const car of cars) if(car.z<0.5) drawCar(car);
+    for(const car of cars) if(!car.onBr) drawCar(car);
+    for(const car of cars) if(!car.onBr && car.fx) drawSpark(car.fx);
+
     if(layer.over) ctx.drawImage(layer.over, 0,0,W,H);
+
     for(const car of cars){
-      if(car.z<0.5) continue;
+      if(!car.onBr) continue;
       for(const t of car.trail) drawTrail(t);
     }
     ctx.globalAlpha=1;
-    for(const car of cars) if(car.z>=0.5) drawCar(car);
-    for(const car of cars) if(car.fx) drawSpark(car.fx);
+    for(const car of cars) if(car.onBr) drawCar(car);
+    for(const car of cars) if(car.onBr && car.fx) drawSpark(car.fx);
   }else if(layer.over){
     ctx.drawImage(layer.over, 0,0,W,H);
   }
