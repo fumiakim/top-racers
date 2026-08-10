@@ -211,13 +211,12 @@ const COURSES = [
     desc:'左右非対称の8の字。<br>中央で自分のコースと立体交差する。',
     width:92, runoff:14,
     ground:{ a:'#8a6a4e', b:'#7d5f45' },
-    // 8の字。13→0 と 6→7 の2本の長い直線が中央で交差し、6→7 側が橋になる。
-    // 右ループを外へ大きく広げてあるので、交差点は中央より左寄りになる
-    pts:[ [ 790,215,120],[1010,120,110],[1190,250,105],[1150,400,105],
-          [1195,545,105],[1010,615,105],[ 760,495,120],
-          [ 380,180,115],[ 230,130,105],[ 100,260, 95],[ 140,390, 95],
-          [  98,515, 95],[ 245,600, 95],[ 420,530,115] ],
-    bridge:{ v:7, span:150, ramp:105 }     // 頂点7へ向かう直線を高架にする
+    // 8の字。13→0 と 8→9 の2本の長い直線が中央で交差し、8→9 側が橋になる。
+    // 右ループが左ループの2倍以上あるので、交差点はかなり左寄りになる
+    pts:[ [ 620,195,120],[ 850,122,110],[1085,122,110],[1176,292,105],
+          [1130,415,100],[1192,585,105],[ 955,612,105],[ 780,604,105],[ 600,500,120],
+          [ 300,175,110],[ 145,168,100],[ 118,360,100],[ 178,542,100],[ 355,558,110] ],
+    bridge:{ v:9, span:150, ramp:105 }     // 頂点9へ向かう直線を高架にする
   }
 ];
 
@@ -465,13 +464,13 @@ function renderTrackLayer(tk, rs){
   // 端に継ぎ目が出ない（区間を抜くと橋がカプセル状に浮いて見える）
   paintRoad(base.g, tk, 0, 0, rs);
 
-  // タイヤバリア（コーナー外側。他の路面に被らない場所だけ）
-  const tires=[];
+  // 樹木（コーナー外側。他の路面に被らない場所だけ）
+  const trees=[];
   const clear=(x,y)=>{
-    if(x<10||x>W-10||y<10||y>H-10) return false;
+    if(x<14||x>W-14||y<14||y>H-14) return false;
     for(let i=0;i<tk.n;i+=2){
       const p=path[i];
-      if((p.x-x)**2+(p.y-y)**2 < (half+20)**2) return false;
+      if((p.x-x)**2+(p.y-y)**2 < (half+24)**2) return false;
     }
     return true;
   };
@@ -479,15 +478,31 @@ function renderTrackLayer(tk, rs){
     const p=path[i];
     if(Math.abs(p.k) < 1/190 || p.z>0) continue;
     const s=-Math.sign(p.k);
-    const x=p.x+p.nx*s*(half+26), y=p.y+p.ny*s*(half+26);
+    const x=p.x+p.nx*s*(half+30), y=p.y+p.ny*s*(half+30);
     if(!clear(x,y)) continue;
-    if(tires.some(t=>(t[0]-x)**2+(t[1]-y)**2 < 15*15)) continue;
-    tires.push([x,y]);
+    if(trees.some(t=>(t[0]-x)**2+(t[1]-y)**2 < 16*16)) continue;
+    trees.push([x,y]);
   }
-  for(const [x,y] of tires){
-    base.g.fillStyle='rgba(0,0,0,.28)'; base.g.beginPath(); base.g.arc(x+1.5,y+2,8,0,7); base.g.fill();
-    base.g.fillStyle=SKIN.tire;         base.g.beginPath(); base.g.arc(x,y,8,0,7); base.g.fill();
-    base.g.fillStyle='rgba(255,255,255,.13)'; base.g.beginPath(); base.g.arc(x,y,3.4,0,7); base.g.fill();
+  // 大きさ・色・位置のばらつきは決定的な乱数で出す
+  // （表示倍率が変わって描き直しても同じ林になる）
+  let ts=1013904223;
+  const rnd=()=>{ ts=(ts*1103515245+12345)&0x7fffffff; return ts/0x7fffffff; };
+  const G2=base.g;
+  for(const [tx,ty] of trees){
+    const r=5.5+rnd()*7.5;                       // 半径 5.5〜13px
+    const x=tx+(rnd()-0.5)*9, y=ty+(rnd()-0.5)*9;
+    const hue=88+Math.round(rnd()*46);           // 黄緑〜青緑
+    const sat=22+Math.round(rnd()*28);
+    const li =15+Math.round(rnd()*17);
+    const body=`hsl(${hue} ${sat}% ${li}%)`, lite=`hsl(${hue} ${sat}% ${li+10}%)`;
+    G2.fillStyle='rgba(0,0,0,.30)';
+    G2.beginPath(); G2.arc(x+r*0.28, y+r*0.34, r, 0, 7); G2.fill();
+    G2.fillStyle=body;                           // 幹まわりの塊を3つ重ねて樹冠にする
+    G2.beginPath(); G2.arc(x, y, r, 0, 7); G2.fill();
+    G2.beginPath(); G2.arc(x-r*0.5, y-r*0.34, r*0.62, 0, 7); G2.fill();
+    G2.beginPath(); G2.arc(x+r*0.52, y-r*0.18, r*0.56, 0, 7); G2.fill();
+    G2.fillStyle=lite;
+    G2.beginPath(); G2.arc(x-r*0.28, y-r*0.34, r*0.44, 0, 7); G2.fill();
   }
 
   // スタート／フィニッシュ
