@@ -367,9 +367,10 @@ const TRACKS = COURSES.map(buildTrack);
 /* =========================================================
    3. 描画リソース（コース画像・地面タイル）
    ========================================================= */
-/** path のノード i0 から i1 までを描く（i1 が i0 より小さければ一周して戻る） */
+/** path のノード i0 から i1 までを描く。i0===i1 なら全周（0 本ではない） */
 function strokePart(g, path, i0, i1, width, color, dash, offset){
-  const n=path.length, count=((i1-i0)%n+n)%n;
+  const n=path.length;
+  const count=((((i1-i0)%n)+n)%n) || n;
   g.beginPath();
   for(let k=0;k<=count;k++){
     const p=path[(i0+k)%n];
@@ -442,9 +443,9 @@ function renderTrackLayer(tk, rs){
   const base=mk();
   const path=tk.path, line=tk.line, half=tk.half, br=tk.bridge;
 
-  // 橋があるときは、橋の区間を base から外して別レイヤーに描く
-  if(br) paintRoad(base.g, tk, (br.b1+1)%tk.n, br.b0, rs);
-  else   paintRoad(base.g, tk, 0, 0, rs);
+  // 地上レイヤーは全周ぶん描く。橋の区間はこの上から別レイヤーで塗り直すので、
+  // 端に継ぎ目が出ない（区間を抜くと橋がカプセル状に浮いて見える）
+  paintRoad(base.g, tk, 0, 0, rs);
 
   // タイヤバリア（コーナー外側。他の路面に被らない場所だけ）
   const tires=[];
@@ -486,7 +487,7 @@ function renderTrackLayer(tk, rs){
   if(br){
     over=mk();
     const o=over.g;
-    o.save(); o.translate(7,10); o.globalAlpha=.42;      // 高架部分だけに影を落とす
+    o.save(); o.translate(10,13); o.globalAlpha=.5;      // 高架部分だけに影を落とす
     strokePart(o, path, br.f0, br.f1, half*2+14, '#000');
     o.restore();
     paintRoad(o, tk, br.b0, br.b1, rs);
