@@ -367,8 +367,10 @@ const TRACKS = COURSES.map(buildTrack);
 /* =========================================================
    3. 描画リソース（コース画像・地面タイル）
    ========================================================= */
-/** path のノード i0 から i1 までを描く。i0===i1 なら全周（0 本ではない） */
-function strokePart(g, path, i0, i1, width, color, dash, offset){
+/** path のノード i0 から i1 までを描く。i0===i1 なら全周（0 本ではない）
+    cap: 途中で切る場合は 'butt'（丸キャップだと帯が路面を横切る半円になる）
+    dashOff: 破線の位相。途中から描くときに全周描画と位相を揃えるのに使う */
+function strokePart(g, path, i0, i1, width, color, dash, offset, cap, dashOff){
   const n=path.length;
   const count=((((i1-i0)%n)+n)%n) || n;
   g.beginPath();
@@ -378,8 +380,11 @@ function strokePart(g, path, i0, i1, width, color, dash, offset){
     k?g.lineTo(x,y):g.moveTo(x,y);
   }
   g.lineWidth=width; g.strokeStyle=color;
-  g.lineJoin='round'; g.lineCap='round';
-  g.setLineDash(dash||[]); g.stroke(); g.setLineDash([]);
+  g.lineJoin='round'; g.lineCap=cap||'round';
+  g.setLineDash(dash||[]);
+  g.lineDashOffset=dashOff||0;
+  g.stroke();
+  g.setLineDash([]); g.lineDashOffset=0;
 }
 function strokeLoop(g, path, width, color, dash, offset){
   strokePart(g, path, 0, 0, width, color, dash, offset);
@@ -403,33 +408,45 @@ function groundPattern(gr){
   return GROUND_TILE.get(key);
 }
 
-/** 路面の断面（壁→減速ゾーン→アスファルト→縁石→センターライン）を i0..i1 に描く */
-function paintRoad(g, tk, i0, i1, rs){
+/** 路面の断面（壁→減速ゾーン→アスファルト→縁石→センターライン）を i0..i1 に描く。
+    partial=true（橋など途中区間）のときは切り口を平らにし、破線の位相を全周描画に合わせる */
+function paintRoad(g, tk, i0, i1, rs, partial){
   const path=tk.path, line=tk.line, half=tk.half;
-  g.save(); g.globalAlpha=.3; strokePart(g,path,i0,i1,half*2+16,'#000'); g.restore();
-  strokePart(g, path, i0,i1, half*2+9, SKIN.wallD);
-  strokePart(g, path, i0,i1, half*2+3, SKIN.wall);
-  strokePart(g, path, i0,i1, half*2,   SKIN.apron);
+  const n=tk.n, cap = partial ? 'butt' : 'round';
+  const dOff = partial ? i0*(tk.length/tk.n) : 0;
+  const S=(w,c,dash,offset)=>strokePart(g,path,i0,i1,w,c,dash,offset,cap,dash?dOff:0);
+  // アスファルトより外側の帯は端を少し内側で切る。そうしないと切り口で
+  // 下の層（明るい壁の色）が髪の毛ほど覗いて継ぎ目に見える
+  const e0 = partial ? (i0+5)%n : i0, e1 = partial ? ((i1-5)%n+n)%n : i1;
+  const E=(w,c)=>strokePart(g,path,e0,e1,w,c,null,0,cap);
+
+  g.save(); g.globalAlpha=.3; E(half*2+16,'#000'); g.restore();
+  E(half*2+9, SKIN.wallD);
+  E(half*2+3, SKIN.wall);
+  E(half*2,   SKIN.apron);
 
   // アスファルト：別キャンバスに帯を描いてから source-atop でノイズを乗せる
   const ac=document.createElement('canvas');
   ac.width=Math.round(W*rs); ac.height=Math.round(H*rs);
   const a=ac.getContext('2d'); a.scale(rs,rs);
-  strokePart(a, path, i0,i1, line*2, SKIN.road);
+  strokePart(a, path, i0,i1, line*2, SKIN.road, null, 0, cap);
   a.setTransform(1,0,0,1,0,0);
   a.globalCompositeOperation='source-atop';
+  // ノイズは決定的に作る。地上レイヤーと橋レイヤーで同じ模様になり、境目が出ない
+  let seed=20240809;
+  const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; };
   const dots=Math.round(20000*rs*rs);
   for(let i=0;i<dots;i++){
-    a.fillStyle = Math.random()>.5 ? 'rgba(255,255,255,.045)' : 'rgba(0,0,0,.07)';
-    a.fillRect(Math.random()*ac.width, Math.random()*ac.height, 1.6*rs, 1.6*rs);
+    a.fillStyle = rnd()>.5 ? 'rgba(255,255,255,.045)' : 'rgba(0,0,0,.07)';
+    a.fillRect(rnd()*ac.width, rnd()*ac.height, 1.6*rs, 1.6*rs);
   }
   g.drawImage(ac,0,0,W,H);
 
   for(const s of [-1,1]){
-    strokePart(g, path, i0,i1, 7, SKIN.kerbB, null,    s*line);
-    strokePart(g, path, i0,i1, 7, SKIN.kerbA, [17,17], s*line);
+    S(7, SKIN.kerbB, null,    s*line);
+    S(7, SKIN.kerbA, [17,17], s*line);
   }
-  strokePart(g, path, i0,i1, 3, SKIN.lane, [20,26]);
+  S(3, SKIN.lane, [20,26]);
 }
 
 /** コース画像。立体交差があるコースは橋を別レイヤーに分ける */
@@ -488,12 +505,12 @@ function renderTrackLayer(tk, rs){
     over=mk();
     const o=over.g;
     o.save(); o.translate(10,13); o.globalAlpha=.5;      // 高架部分だけに影を落とす
-    strokePart(o, path, br.f0, br.f1, half*2+14, '#000');
+    strokePart(o, path, br.f0, br.f1, half*2+14, '#000', null, 0, 'butt');
     o.restore();
-    paintRoad(o, tk, br.b0, br.b1, rs);
-    for(const s of [-1,1]){                               // 高欄
-      strokePart(o, path, br.b0, br.b1, 5, SKIN.wallD, null, s*(half+6));
-      strokePart(o, path, br.b0, br.b1, 2.5,'#c9cfda',  null, s*(half+6));
+    paintRoad(o, tk, br.b0, br.b1, rs, true);
+    for(const s of [-1,1]){                               // 高欄は高架部分だけ
+      strokePart(o, path, br.f0, br.f1, 5, SKIN.wallD, null, s*(half+6), 'butt');
+      strokePart(o, path, br.f0, br.f1, 2.5,'#c9cfda',  null, s*(half+6), 'butt');
     }
   }
   return {base:base.c, over:over?over.c:null};
