@@ -116,7 +116,7 @@
       </div>
 
       <div class="group" style="width:100%">
-        <p class="sub">コースを選ぶ</p>
+        <p class="sub">コースを選ぶ　<kbd>←</kbd><kbd>→</kbd> で選択　<kbd>Enter</kbd> でスタート</p>
         <div class="row" id="courses"></div>
       </div>
 
@@ -208,14 +208,15 @@ const COURSES = [
   {
     name:'クロスオーバー・8',
     diff:'エキスパート',
-    desc:'14コーナーの8の字。<br>中央で自分のコースと立体交差する。',
+    desc:'左右非対称の8の字。<br>中央で自分のコースと立体交差する。',
     width:92, runoff:14,
     ground:{ a:'#8a6a4e', b:'#7d5f45' },
-    // 8の字。13→0 と 6→7 の2本の長い直線が中央で交差し、6→7 側が橋になる
-    pts:[ [ 880,195,120],[1055,145,110],[1178,255, 95],[1140,390, 95],
-          [1175,505, 95],[1030,590, 95],[ 850,510,120],
-          [ 415,195,120],[ 245,140,110],[ 105,265, 95],[ 145,395, 95],
-          [ 100,520, 95],[ 255,600, 95],[ 455,520,120] ],
+    // 8の字。13→0 と 6→7 の2本の長い直線が中央で交差し、6→7 側が橋になる。
+    // 右ループを外へ大きく広げてあるので、交差点は中央より左寄りになる
+    pts:[ [ 790,215,120],[1010,120,110],[1190,250,105],[1150,400,105],
+          [1195,545,105],[1010,615,105],[ 760,495,120],
+          [ 380,180,115],[ 230,130,105],[ 100,260, 95],[ 140,390, 95],
+          [  98,515, 95],[ 245,600, 95],[ 420,530,115] ],
     bridge:{ v:7, span:150, ramp:105 }     // 頂点7へ向かう直線を高架にする
   }
 ];
@@ -595,7 +596,7 @@ function active(){ return G.cars.filter(c=>!c.gone); }
 const keys = Object.create(null);
 addEventListener('keydown', e=>{
   const k=e.key.length===1?e.key.toLowerCase():e.key;
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].includes(e.key)) e.preventDefault();
   if(!keys[k]) onKeyPress(k);
   keys[k]=true;
 });
@@ -603,6 +604,12 @@ addEventListener('keyup', e=>{ keys[e.key.length===1?e.key.toLowerCase():e.key]=
 addEventListener('blur', ()=>{ for(const k in keys) keys[k]=false; });
 
 function onKeyPress(k){
+  if(G.mode==='title'){                       // タイトルは矢印で選び Enter で決定
+    if(k==='ArrowLeft'){  moveCourse(-1); return; }
+    if(k==='ArrowRight'){ moveCourse( 1); return; }
+    if(k==='Enter'){ startRace(); return; }
+  }
+  if(k==='Enter' && G.mode==='result'){ startRace(); return; }
   if(k==='p'){ if(G.mode==='race') pause(); else if(G.mode==='pause') resume(); }
   if(k==='r'){ if(G.mode!=='title') startRace(); }
   if(k==='m'){ muted=!muted; }
@@ -1284,6 +1291,16 @@ function pickGroup(id, attr, cb){
 pickGroup('players','p', v=>G.players=+v);
 pickGroup('courses','c', v=>{ G.courseIdx=+v; layerCache.idx=-1; });
 pickGroup('laps','l',    v=>G.totalLaps=+v);
+
+/** 矢印キーでコースを選ぶ（クリックと同じ見た目・状態にする） */
+function moveCourse(dir){
+  const cards=[...document.querySelectorAll('#courses .card')];
+  if(!cards.length) return;
+  const i=(G.courseIdx+dir+cards.length)%cards.length;
+  G.courseIdx=i; layerCache.idx=-1;
+  cards.forEach((b,j)=>b.classList.toggle('sel', j===i));
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
 
 document.getElementById('btnStart').onclick   = ()=>startRace();
 document.getElementById('btnResume').onclick  = resume;
